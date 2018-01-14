@@ -1,5 +1,6 @@
 package com.selcukcihan.tutor.sqs.business;
 
+import com.amazonaws.util.StringUtils;
 import com.google.inject.Inject;
 import com.selcukcihan.tutor.sqs.service.SQSException;
 import com.selcukcihan.tutor.sqs.service.SQSWrapper;
@@ -46,7 +47,11 @@ public class SQSDriver {
                 pop();
                 break;
             case "create":
-                createQueue(tokens[1]);
+                if (tokens.length != 2) {
+                    output.println("create requires a queue name");
+                } else {
+                    createQueue(tokens[1]);
+                }
                 break;
             case "display":
                 display();
@@ -61,7 +66,11 @@ public class SQSDriver {
     }
 
     private void push(String value) {
-        sqsWrapper.enqueue(value);
+        if (StringUtils.isNullOrEmpty(sqsWrapper.getCurrentQueueUrl())) {
+            output.println("create a queue first");
+        } else {
+            sqsWrapper.enqueue(value);
+        }
     }
 
     private void pop() {

@@ -235,4 +235,59 @@ public class SQSDriverTest {
         ps.close();
         assertThat(logs, containsString("push requires a value"));
     }
+
+    @Test
+    public void doPushNoQueue() throws Exception {
+        // given
+        SQSWrapper sqsWrapperMock = mock(SQSWrapper.class);
+        Scanner scannerMock = mock(Scanner.class);
+
+        when(scannerMock.nextLine())
+                .thenReturn("push value")
+                .thenReturn("exit");
+        when(sqsWrapperMock.getCurrentQueueUrl())
+                .thenReturn(null);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos, true, "utf-8");
+
+        SQSDriver sqsDriver = new SQSDriver(sqsWrapperMock, scannerMock, ps);
+
+        // when
+        sqsDriver.loop();
+
+        // then
+        verify(scannerMock, times(2)).nextLine();
+        verify(sqsWrapperMock).getCurrentQueueUrl();
+
+        String logs = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+        ps.close();
+        assertThat(logs, containsString("create a queue first"));
+    }
+
+    @Test
+    public void doCreateNoQueue() throws Exception {
+        // given
+        SQSWrapper sqsWrapperMock = mock(SQSWrapper.class);
+        Scanner scannerMock = mock(Scanner.class);
+
+        when(scannerMock.nextLine())
+                .thenReturn("create")
+                .thenReturn("exit");
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos, true, "utf-8");
+
+        SQSDriver sqsDriver = new SQSDriver(sqsWrapperMock, scannerMock, ps);
+
+        // when
+        sqsDriver.loop();
+
+        // then
+        verify(scannerMock, times(2)).nextLine();
+
+        String logs = new String(baos.toByteArray(), StandardCharsets.UTF_8);
+        ps.close();
+        assertThat(logs, containsString("create requires a queue name"));
+    }
 }
